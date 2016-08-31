@@ -26,7 +26,7 @@ export function wbxWordCloud() {
     scope.$on("$destroy,", function () {
       ctrl.element = null;
       console.log("wordCloud directive destroyed");
-  
+
     })
   }
 
@@ -36,7 +36,7 @@ export function wbxWordCloud() {
 class WordCloudController {
   constructor(wordService, $element) {
     'ngInject';
-    
+
     this.count = 0;
     var that = this;
     this.element = $element;
@@ -106,9 +106,6 @@ class WordCloudController {
       .domain([25000, 0])
       .range([0.7, 3.5]);
 
-    var scaledDivideBy = pix(pixelsFactor);
-
-    
     that.divideBy = pixNeeded < 7000 ? 3
       : pixNeeded < 9000 ? 2
       : pixNeeded < 12000 ? 1.7
@@ -195,7 +192,7 @@ class WordCloudController {
         that.runListeners('onSelect', d, undefined); // undefined array in case of single select
       }
     }
-  
+
   }
 
   deselectAll() {
