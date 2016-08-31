@@ -1,0 +1,40 @@
+.word-cloud.selection-mode text:not(.selected) {
+    opacity: 0.9;
+    fill: silver !important;
+}
+
+.word-cloud.selection-mode text.selected {
+    opacity: 1.5;
+    stroke-width: 1px;
+    stroke: red;
+}
+
+.word-cloud.regular text:not(.selected) {
+  opacity: 1 ;
+}
+
+.word-cloud text {
+    cursor: pointer;
+}
+
+.word-cloud text:hover {
+  opacity: 1.5;
+  text-shadow: 1px 1px 2px black, 0 0 5px blue, 0 0 5px darkblue;
+}
+
+.word-cloud text:not(.hovered) {
+    opacity: 1;
+}
+
+.word-cloud.hover-mode text.hovered {
+/*    stroke-width: 1px;
+    stroke: black*/
+  opacity: 1.5;
+  text-shadow: 1px 1px 2px black, 0 0 15px blue, 0 0 5px darkblue;
+}
+
+#wordCloud{
+  height: 100vh;
+}
+
+
