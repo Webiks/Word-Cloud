@@ -5,4 +5,5 @@ node_modules/*
 dist/*
 .idea/*
 .tmp/*
-.idea
+.hg/
+dist/
