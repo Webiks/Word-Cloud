@@ -5,3 +5,12 @@ coverage/
 .idea/
 .tmp/
 .hg/
+
+*.ico
+dist/assets/images/protractor.png
+*.png
+dist/fonts/MaterialIcons-Regular.eot
+*.woff
+dist/fonts/MaterialIcons-Regular.ttf
+*.map
+dist/index.html
