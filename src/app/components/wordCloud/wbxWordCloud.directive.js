@@ -240,13 +240,12 @@ class WordCloudController {
    */
 
   initCloud(data) {
-    this.count++;
     var that = this;
     this.defineCloud(data);
     // When isInitialized -->  remove cloud , otherwise --> append layout to the existing svg and g
-    if (this.cloud || this.count) {
+    if (this.cloud) {
       this.cloud = null;
-      d3.select(that.elem.childNodes[1]).remove();  // the div of the any wordCloud is has 2 childNodes: #text and SVG . by removing svg we adding it to the same div.
+      d3.select(that.elem.childNodes[0]).remove();  // the div of the any wordCloud is has 2 childNodes: #text and SVG . by removing svg we adding it to the same div.
       that.elem = null;
     }
     that.elem = that.element[0];
