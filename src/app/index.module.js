@@ -1,2 +1,2 @@
 import {wbxWordCloud} from './components/wordCloud/wbxWordCloud'
-angular.module('untitled1',['wbxWordCloud']);
+angular.module('wordCloud',['wbxWordCloud']);

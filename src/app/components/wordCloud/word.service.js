@@ -22,9 +22,9 @@ export class wordService {
   }
 
   // get delimiters from config file
-  getConfig(configPath) {
+  getConfig(configPath,configParams) {
     var defer = this.$q.defer();
-     if (angular.isUndefined(this.config)) {
+     if (angular.isUndefined(configParams)) {
        configPath = (angular.isDefined(configPath)) ? configPath :this.getCurrentDirectory() ;
       this.http.get(configPath + 'wbxCloudConfig.json')
         .then(
@@ -36,18 +36,17 @@ export class wordService {
           }
         );
     } else {
-      return this.config;
+      return configParams;
     }
 
     return defer.promise;
 
   }
 
-  setText(data, append,configPath) {
+  setText(data, append) {
 
     function handleTextData(config) {
       var parsedData = that.wordService.dataToWordsArr(config.delimiters, that.text); // get the delimiters
-     // that.wordCloudApi.stats = parsedData
       that.initCloud(parsedData);
     }
 
@@ -60,7 +59,7 @@ export class wordService {
     }
     let that = this;
 
-    that.wordService.$q.when(that.wordService.getConfig(configPath)).then(handleTextData);
+    that.wordService.$q.when(that.wordService.getConfig(this.config.configUrl,this.config.configParams)).then(handleTextData);
   }
 
   setListener(eventName, callback) {
@@ -236,13 +235,13 @@ export class wordService {
 
   getCurrentDirectory() {
    //@@ Dev Version @@
-    var scripts = document.getElementsByTagName("script"), i;
+  /*  var scripts = document.getElementsByTagName("script"), i;
    for (i = 0; i < scripts.length; i++) {
       if (scripts[i].src.search(/index.module.js/i) > 0) {
         break;
       }
     }
-    var currentScriptPath = scripts[i].src;
+    var currentScriptPath = scripts[i].src;*/
    // var resCurrentDirectory = currentScriptPath.substring(0, currentScriptPath.lastIndexOf("/app/") + 1);
 
     // Build Version :

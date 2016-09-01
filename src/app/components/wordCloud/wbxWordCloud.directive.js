@@ -61,6 +61,8 @@ class WordCloudController {
        */
       if (angular.isDefined(that.config) && angular.isFunction(that.config.initCloud)) {
         that.config.initCloud(that.wordCloudApi);
+        that.configUrl=that.config.configUrl;
+        that.configParams=that.config.configParams;
       }
       else console.log("no initCloud define in external controller");
     };
@@ -84,27 +86,12 @@ class WordCloudController {
     var dataLength = data.length;
 
     var charSum = 0;
-    var FontSizeSum = 0;
     var pixNeeded = 0;
+
     _.forEach(data, function (word) {
-
       charSum += word.text.length;
-
       pixNeeded += that.wordService.calcFontSize(word.id) * word.text.length;
-
-
-      FontSizeSum += that.wordService.calcFontSize(word.id);
     });
-
-    var wordAvg = charSum / data.length;
-
-    var FontSizeAvg = FontSizeSum / data.length;
-
-    var pixelsFactor = wordAvg * FontSizeAvg;
-
-    var pix = d3.scale.linear()
-      .domain([25000, 0])
-      .range([0.7, 3.5]);
 
     that.divideBy = pixNeeded < 7000 ? 3
       : pixNeeded < 9000 ? 2
