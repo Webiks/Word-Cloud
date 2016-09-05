@@ -165,14 +165,9 @@ class WordCloudController {
     // single click handling :
     else {
       var flag = d3.select(domWord).classed("selected"); // d.selected;
-      var selectedFilter = _.filter(that.data, {selected: true}); // TODO: use that.selectedWords
       d3.selectAll('.selected').classed('selected', false);
-      _.forEach(selectedFilter, function (word) {
-        word.selected = false;
-      });
       that.selectedWords.splice(0, that.selectedWords.length);
       that.selectedWords.push(d);
-      //d.selected = flag;
       d3.select(domWord).classed("selected", !flag);
       d3.select(that.elem).classed("selection-mode", !flag);
       if (angular.isDefined(that.runListeners)) { // for testing
