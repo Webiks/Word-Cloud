@@ -126,6 +126,15 @@ class WordCloudController {
       .domain([that.wordService.fontMin, that.wordService.fontMax])
       .range([that.colors [0], that.colors [7]]);
 
+    if (that.h<600 ||that.w<500) // little window handling
+    {
+      that.divideBy=1;
+      that.scale=0.8;
+      if(pixNeeded>15000) { //little window and lots of words handling by shrink font
+        that.wordService.fontMax = 24;
+        that.wordService.fontMin = 8;
+      }
+    }
 
   }
 
