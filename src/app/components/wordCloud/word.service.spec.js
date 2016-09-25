@@ -2,7 +2,7 @@
  * Created by Harel on 27/07/2016.
  */
 describe('wordService', function () {
-  beforeEach(angular.mock.module('untitled1'));
+//  beforeEach(angular.mock.module('untitled1'));
   beforeEach(angular.mock.module('wbxWordCloud'));
 
   describe('wordService test ', function () {
@@ -15,7 +15,7 @@ describe('wordService', function () {
       defer = $q.defer();
 
     }));
- 
+
     describe('HardCodeded test of getConfig and dataToWordsArr', function () {
       it('should get the delimiter from the config file and then trigger dataToWordsArr() and then to init the cloud with the parsed data!', function () {
         testWordService.data=[{

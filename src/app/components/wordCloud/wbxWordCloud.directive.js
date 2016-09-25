@@ -53,8 +53,13 @@ class WordCloudController {
         setText: that.wordService.setText.bind(this),
         setListener: that.wordService.setListener.bind(this),
         onSelect: that.wordService.onSelect.bind(this),
-        onHover: that.wordService.onHover.bind(this)
+        onHover: that.wordService.onHover.bind(this),
+        getCloudWords :  that.getCloudWords()
+
       };
+
+
+
       /* notify parent about onInit
        The validation is to check if there is in the external directive has the init function before we send to it the Api
        the 'config' var will be the external controller .
@@ -71,7 +76,9 @@ class WordCloudController {
       console.log("wordCloud controller destroyed");
     })
   }
-
+getCloudWords(){
+  return _.cloneDeep(that.data)
+}
   defineCloud(data) {
     var that = this;
 
@@ -93,7 +100,7 @@ class WordCloudController {
       pixNeeded += that.wordService.calcFontSize(word.id) * word.text.length;
     });
 
-    that.divideBy = pixNeeded < 7000 ? 3
+    that.divideBy = pixNeeded < 7000 ? 2.5
       : pixNeeded < 9000 ? 2
       : pixNeeded < 12000 ? 1.7
       : pixNeeded < 13000 ? 1.6
@@ -139,13 +146,13 @@ class WordCloudController {
   }
 
   mouseHovered(d) {
-    d3.select('#p' + d.id).classed("hovered", !d.hovered);
+    this.cloud.select('#p' + d.id).classed("hovered", !d.hovered);
     d3.select(this.element[0]).classed("hovered-mode", !d.hovered);
     this.runListeners('onHover', d);
   }
 
   mouseOut(d) {
-    d3.select('#p' + d.id).classed("hovered", !d.hovered);
+    this.cloud.select('#p' + d.id).classed("hovered", !d.hovered);
     d3.select(this.element[0]).classed("hovered-mode", !d.hovered);
     this.runListeners('onHover', d);
   }
@@ -159,25 +166,27 @@ class WordCloudController {
       domWord = this.domWord;
     // CTRL click handling :
     if (window.event.ctrlKey || this.isCtrl) { // this.ctrl for testing
-      if (d3.select(domWord).classed("selected")/*d.selected*/) {
+      if (that.cloud.select('#p' + d.id).classed("selected")/*d.selected*/) {
         _.remove(that.selectedWords, d);
-        d3.select(domWord).classed("selected", !d3.select(domWord).classed("selected") /*!d.selected*/);
-        d3.select(that.elem).classed("selection-mode", d3.select(domWord).classed("selected")/*!d.selected*/);
+        that.cloud.select('#p' + d.id).classed("selected", !that.cloud.select('#p' + d.id).classed("selected") /*!d.selected*/);
+        if(that.selectedWords.length==0) {
+        d3.select(that.elem).classed("selection-mode", that.cloud.select(domWord).classed("selected")/*!d.selected*/);
+		}
         that.runListeners('onSelect', d, []);
       } else {
         that.selectedWords.push(d);
-        d3.select(domWord).classed("selected", !d3.select(domWord).classed("selected") /*!d.selected*/);
-        d3.select(that.elem).classed("selection-mode", d3.select(domWord).classed("selected")/*!d.selected*/);
+        that.cloud.select('#p' + d.id).classed("selected", !that.cloud.select('#p' + d.id).classed("selected") /*!d.selected*/);
+        d3.select(that.elem).classed("selection-mode",that.cloud.select('#p' + d.id).classed("selected")/*!d.selected*/);
         that.runListeners('onSelect', d, that.selectedWords);
       }
     }
     // single click handling :
     else {
-      var flag = d3.select(domWord).classed("selected"); // d.selected;
-      d3.selectAll('.selected').classed('selected', false);
+      var flag = that.cloud.select('#p' + d.id).classed("selected"); // d.selected;
+      that.cloud.selectAll('.selected').classed('selected', false);
       that.selectedWords.splice(0, that.selectedWords.length);
       that.selectedWords.push(d);
-      d3.select(domWord).classed("selected", !flag);
+      that.cloud.select('#p' + d.id).classed("selected", !flag);
       d3.select(that.elem).classed("selection-mode", !flag);
       if (angular.isDefined(that.runListeners)) { // for testing
         that.runListeners('onSelect', d, undefined); // undefined array in case of single select
@@ -189,7 +198,7 @@ class WordCloudController {
   deselectAll() {
     // click outside words cause unselect
     //for each  selected item, unselect it.
-    d3.selectAll('.selected').classed('selected', false);
+    this.cloud.selectAll('.selected').classed('selected', false);
     d3.select(this.elem).classed("selection-mode", false);
     this.runListeners('onSelect', undefined);
   }

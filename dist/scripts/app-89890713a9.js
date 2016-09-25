@@ -48,7 +48,7 @@
 
 	var _wbxWordCloud = __webpack_require__(1);
 
-	angular.module('wbxWordCloud', ['wbxWordCloud']);
+	angular.module('wordCloud', ['wbxWordCloud']);
 
 /***/ },
 /* 1 */
@@ -110,9 +110,9 @@
 
 	  _createClass(wordService, [{
 	    key: 'getConfig',
-	    value: function getConfig(configPath) {
+	    value: function getConfig(configPath, configParams) {
 	      var defer = this.$q.defer();
-	      if (angular.isUndefined(this.config)) {
+	      if (angular.isUndefined(configParams)) {
 	        configPath = angular.isDefined(configPath) ? configPath : this.getCurrentDirectory();
 	        this.http.get(configPath + 'wbxCloudConfig.json').then(function (response) {
 	          defer.resolve(response.data);
@@ -121,18 +121,17 @@
 	          defer.resolve("Error"); // Reject
 	        });
 	      } else {
-	          return this.config;
+	          return configParams;
 	        }
 
 	      return defer.promise;
 	    }
 	  }, {
 	    key: 'setText',
-	    value: function setText(data, append, configPath) {
+	    value: function setText(data, append) {
 
 	      function handleTextData(config) {
 	        var parsedData = that.wordService.dataToWordsArr(config.delimiters, that.text); // get the delimiters
-	        // that.wordCloudApi.stats = parsedData
 	        that.initCloud(parsedData);
 	      }
 
@@ -144,7 +143,7 @@
 	      }
 	      var that = this;
 
-	      that.wordService.$q.when(that.wordService.getConfig(configPath)).then(handleTextData);
+	      that.wordService.$q.when(that.wordService.getConfig(this.config.configUrl, this.config.configParams)).then(handleTextData);
 	    }
 	  }, {
 	    key: 'setListener',
@@ -331,14 +330,13 @@
 	    key: 'getCurrentDirectory',
 	    value: function getCurrentDirectory() {
 	      //@@ Dev Version @@
-	      var scripts = document.getElementsByTagName("script"),
-	          i;
-	      for (i = 0; i < scripts.length; i++) {
-	        if (scripts[i].src.search(/index.module.js/i) > 0) {
-	          break;
+	      /*  var scripts = document.getElementsByTagName("script"), i;
+	       for (i = 0; i < scripts.length; i++) {
+	          if (scripts[i].src.search(/index.module.js/i) > 0) {
+	            break;
+	          }
 	        }
-	      }
-	      var currentScriptPath = scripts[i].src;
+	        var currentScriptPath = scripts[i].src;*/
 	      // var resCurrentDirectory = currentScriptPath.substring(0, currentScriptPath.lastIndexOf("/app/") + 1);
 
 	      // Build Version :
@@ -431,6 +429,8 @@
 	       */
 	      if (angular.isDefined(that.config) && angular.isFunction(that.config.initCloud)) {
 	        that.config.initCloud(that.wordCloudApi);
+	        that.configUrl = that.config.configUrl;
+	        that.configParams = that.config.configParams;
 	      } else console.log("no initCloud define in external controller");
 	    };
 	    this.selectedWords = [];
@@ -455,24 +455,12 @@
 	      var dataLength = data.length;
 
 	      var charSum = 0;
-	      var FontSizeSum = 0;
 	      var pixNeeded = 0;
+
 	      _.forEach(data, function (word) {
-
 	        charSum += word.text.length;
-
 	        pixNeeded += that.wordService.calcFontSize(word.id) * word.text.length;
-
-	        FontSizeSum += that.wordService.calcFontSize(word.id);
 	      });
-
-	      var wordAvg = charSum / data.length;
-
-	      var FontSizeAvg = FontSizeSum / data.length;
-
-	      var pixelsFactor = wordAvg * FontSizeAvg;
-
-	      var pix = d3.scale.linear().domain([25000, 0]).range([0.7, 3.5]);
 
 	      that.divideBy = pixNeeded < 7000 ? 3 : pixNeeded < 9000 ? 2 : pixNeeded < 12000 ? 1.7 : pixNeeded < 13000 ? 1.6 : pixNeeded < 15000 ? 1.5 : pixNeeded < 16000 ? 1.4 : pixNeeded < 17000 ? 1.3 : 1;
 
@@ -599,13 +587,12 @@
 	  }, {
 	    key: 'initCloud',
 	    value: function initCloud(data) {
-	      this.count++;
 	      var that = this;
 	      this.defineCloud(data);
 	      // When isInitialized -->  remove cloud , otherwise --> append layout to the existing svg and g
-	      if (this.cloud || this.count) {
+	      if (this.cloud) {
 	        this.cloud = null;
-	        d3.select(that.elem.childNodes[1]).remove(); // the div of the any wordCloud is has 2 childNodes: #text and SVG . by removing svg we adding it to the same div.
+	        d3.select(that.elem.childNodes[0]).remove(); // the div of the any wordCloud is has 2 childNodes: #text and SVG . by removing svg we adding it to the same div.
 	        that.elem = null;
 	      }
 	      that.elem = that.element[0];
@@ -632,4 +619,4 @@
 /***/ }
 /******/ ]);
 angular.module("wbxWordCloud").run(["$templateCache", function($templateCache) {$templateCache.put("app/components/wordCloud/wordCloud.html","<div id=wordCloud class=\"word-cloud color\" ng-class=\"{\'selection-mode\': vm.selectionMode,\'hover-mode\':vm.hoveredMode}\"></div>");}]);
-//# sourceMappingURL=../maps/scripts/app.js.map
+//# sourceMappingURL=../maps/scripts/app-89890713a9.js.map
