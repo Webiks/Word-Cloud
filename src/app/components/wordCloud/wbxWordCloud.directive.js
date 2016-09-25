@@ -54,10 +54,9 @@ class WordCloudController {
         setListener: that.wordService.setListener.bind(this),
         onSelect: that.wordService.onSelect.bind(this),
         onHover: that.wordService.onHover.bind(this),
-        getCloudWords :  that.getCloudWords()
-
+        deselectAll: that.deselectAll.bind(this),
+        getCloudWords:that.getCloudWords.bind(this)
       };
-
 
 
       /* notify parent about onInit
@@ -66,8 +65,8 @@ class WordCloudController {
        */
       if (angular.isDefined(that.config) && angular.isFunction(that.config.initCloud)) {
         that.config.initCloud(that.wordCloudApi);
-        that.configUrl=that.config.configUrl;
-        that.configParams=that.config.configParams;
+        that.configUrl = that.config.configUrl;
+        that.configParams = that.config.configParams;
       }
       else console.log("no initCloud define in external controller");
     };
@@ -76,56 +75,20 @@ class WordCloudController {
       console.log("wordCloud controller destroyed");
     })
   }
-getCloudWords(){
-  return _.cloneDeep(that.data)
-}
+
+  getCloudWords(){
+    return _.cloneDeep(this.data)
+  }
+
   defineCloud(data) {
     var that = this;
 
     that.elem = that.element[0];
 
+    /* that.w = that.elem.clientWidth;  // check if matter using that than $element that.element.parent().width();
+     that.h = that.element.parent().parent().height();*/
     that.w = that.elem.clientWidth;  // check if matter using that than $element
     that.h = that.elem.clientHeight;
-
-    /*
-     * Compute size of the word cloud by the length of the input words:
-     * */
-    var dataLength = data.length;
-
-    var charSum = 0;
-    var pixNeeded = 0;
-
-    _.forEach(data, function (word) {
-      charSum += word.text.length;
-      pixNeeded += that.wordService.calcFontSize(word.id) * word.text.length;
-    });
-
-    that.divideBy = pixNeeded < 7000 ? 2.5
-      : pixNeeded < 9000 ? 2
-      : pixNeeded < 12000 ? 1.7
-      : pixNeeded < 13000 ? 1.6
-      : pixNeeded < 15000 ? 1.5
-      : pixNeeded < 16000 ? 1.4
-      : pixNeeded < 17000 ? 1.3
-      : 1;
-
-    /*
-     * Compute size of the scale by the length of the input words:
-     * */
-    if (dataLength < 30) {
-      that.scale = 1.4;
-    }
-    else if (dataLength > 30 && dataLength < 100) {
-      that.scale = 1.3;
-    }
-    else if (dataLength > 100 && dataLength < 150) {
-      that.scale = 1.2;
-    }
-    else if (dataLength > 150 && dataLength < 250) {
-      that.scale = 0.9;
-    }
-    else
-      that.scale = 0.8;
 
     that.colors = ["#9FA8DA", "#7986CB", "#5C6BC0", "#3F51B5", "#3949AB", "#303F9F", "#283593", "#1A237E"];
 
@@ -133,16 +96,7 @@ getCloudWords(){
       .domain([that.wordService.fontMin, that.wordService.fontMax])
       .range([that.colors [0], that.colors [7]]);
 
-    if (that.h<600 ||that.w<500) // little window handling
-    {
-      that.divideBy=1;
-      that.scale=0.8;
-      if(pixNeeded>15000) { //little window and lots of words handling by shrink font
-        that.wordService.fontMax = 24;
-        that.wordService.fontMin = 8;
-      }
-    }
-
+    that.divideBy = 1;
   }
 
   mouseHovered(d) {
@@ -158,32 +112,33 @@ getCloudWords(){
   }
 
   clicked(d) {
-    if (angular.isDefined(event.stopPropagation)) { // for testing
-      event.stopPropagation();
-      event.preventDefault();
-    }
-    var that = this.that,
-      domWord = this.domWord;
+
+    var that = this.that
+
+    that.clickFlag = true;//a flag to know that was click on a word and to not propagate the event to the deselectAll event
     // CTRL click handling :
     if (window.event.ctrlKey || this.isCtrl) { // this.ctrl for testing
       if (that.cloud.select('#p' + d.id).classed("selected")/*d.selected*/) {
         _.remove(that.selectedWords, d);
         that.cloud.select('#p' + d.id).classed("selected", !that.cloud.select('#p' + d.id).classed("selected") /*!d.selected*/);
-        if(that.selectedWords.length==0) {
-        d3.select(that.elem).classed("selection-mode", that.cloud.select(domWord).classed("selected")/*!d.selected*/);
-		}
-        that.runListeners('onSelect', d, []);
+        if (that.selectedWords.length == 0) {
+          d3.select(that.elem).classed("selection-mode", that.cloud.select('#p'+d.id).classed("selected")/*!d.selected*/);
+        }
+        that.runListeners('onSelect', d, that.selectedWords);
       } else {
         that.selectedWords.push(d);
         that.cloud.select('#p' + d.id).classed("selected", !that.cloud.select('#p' + d.id).classed("selected") /*!d.selected*/);
-        d3.select(that.elem).classed("selection-mode",that.cloud.select('#p' + d.id).classed("selected")/*!d.selected*/);
+        d3.select(that.elem).classed("selection-mode", that.cloud.select('#p' + d.id).classed("selected")/*!d.selected*/);
         that.runListeners('onSelect', d, that.selectedWords);
       }
     }
     // single click handling :
     else {
+      /*  _.forEach( that.data, function(item){
+       item.selected = false;
+       });*/
       var flag = that.cloud.select('#p' + d.id).classed("selected"); // d.selected;
-      that.cloud.selectAll('.selected').classed('selected', false);
+      that.cloud.selectAll('text').classed('selected', false);
       that.selectedWords.splice(0, that.selectedWords.length);
       that.selectedWords.push(d);
       that.cloud.select('#p' + d.id).classed("selected", !flag);
@@ -192,6 +147,20 @@ getCloudWords(){
         that.runListeners('onSelect', d, undefined); // undefined array in case of single select
       }
     }
+    that.clickFlag = true;
+    //console.log("clicked: "+ that.clickFlag);
+  }
+
+  inDeselectAll() {
+    // click outside words cause unselect
+    //for each  selected item, unselect it.
+    //console.log("inDeselectAll: "+ this.clickFlag);
+    if (!this.clickFlag) {
+      this.cloud.selectAll('.selected').classed('selected', false);
+      d3.select(this.elem).classed("selection-mode", false);
+      this.runListeners('onSelect', undefined);
+    }
+    this.clickFlag = false;
 
   }
 
@@ -200,7 +169,6 @@ getCloudWords(){
     //for each  selected item, unselect it.
     this.cloud.selectAll('.selected').classed('selected', false);
     d3.select(this.elem).classed("selection-mode", false);
-    this.runListeners('onSelect', undefined);
   }
 
   draw() {
@@ -219,7 +187,7 @@ getCloudWords(){
       .attr("transform", function (d) {
         return "translate(" + [d.x, d.y] + ")";
       }).each(function (d) {
-        d3.select(this).on("click", that.clicked.bind({that: that, domWord: this}));
+        d3.select(this).on("click", that.clicked.bind({that: that}));
       })
       .each(function (d) {
         d3.select(this).on("mouseover", that.mouseHovered.bind(that));
@@ -252,28 +220,38 @@ getCloudWords(){
    * @returns --
    */
 
-  initCloud(data) {
+  initCloud(data , selectedWords) {
+
+
     var that = this;
+
     this.defineCloud(data);
     // When isInitialized -->  remove cloud , otherwise --> append layout to the existing svg and g
     if (this.cloud) {
       this.cloud = null;
-      d3.select(that.elem.childNodes[0]).remove();  // the div of the any wordCloud is has 2 childNodes: #text and SVG . by removing svg we adding it to the same div.
+      //d3.select(that.elem.childNodes[0]).remove();  // the div of the any wordCloud is has 2 childNodes: #text and SVG . by removing svg we adding it to the same div.
+      d3.select(that.elem).select("svg").remove();
       that.elem = null;
     }
     that.elem = that.element[0];
 
+
     this.data = data;
     var innerThat = that;
+
+    that.scale = 1;
+
+    let maxSize = _.maxBy(innerThat.data, 'size').size;
 
     this.cloud = d3.select(that.elem).append("svg")
       .attr("viewBox", "0 0 " + that.w + " " + that.h + "")
       .attr("preserveAspectRatio", "xMidYMid meet")
-      .on('click', that.deselectAll.bind(that))
+      .on('click', that.inDeselectAll.bind(that))
       .append("g")
       .attr("transform", "translate(" + (that.w / 2) + "," + (that.h / 2) + ")scale(" + that.scale + ")")
       .attr("margin", "auto");
 
+    that.scale = 1;
     this.layout = d3.layout.cloud().size([that.w / that.divideBy, that.h / that.divideBy])
       .words(that.data)
       .timeInterval(Infinity)
@@ -287,12 +265,23 @@ getCloudWords(){
         return d.text;
       })
       .fontSize(function (d) {
-        return innerThat.wordService.calcFontSize(d.id);
+        return (d.size / maxSize) * 20 + 12;
       })
       .on("end", innerThat.draw.bind(innerThat)) // when the layout has finished attempting to place all words an "end" event is dispatched
       .start();
+
+    let flag = false;
+    //d3.select(this.elem).classed("selection-mode",  selectedWords && selectedWords.length > 0);
+    if(selectedWords){// && selectedWords.length > 0) {//if we get selected words
+      this.cloud.selectAll("text").classed("selected",function(d){
+        let isExist = _.indexOf( selectedWords, d.text) != -1;
+        if(isExist)
+          flag = true;
+        return isExist;
+      });
+      d3.select(this.elem).classed("selection-mode", flag);
+    }
   }
-
-
 }
+
 

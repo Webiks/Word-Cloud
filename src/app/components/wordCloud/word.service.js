@@ -15,7 +15,7 @@ export class wordService {
 
     this.hoveredMode = '';
 
-    this.data = '';
+
 
     this.fontMin = 12, this.fontMax = 32;
 
@@ -24,13 +24,14 @@ export class wordService {
   // get delimiters from config file
   getConfig(configPath,configParams) {
     var defer = this.$q.defer();
-     if (angular.isUndefined(configParams)) {
-       configPath = (angular.isDefined(configPath)) ? configPath :this.getCurrentDirectory() ;
+    if (angular.isUndefined(configParams)) {
+      configPath = (angular.isDefined(configPath)) ? configPath :this.getCurrentDirectory() ;
       this.http.get(configPath + 'wbxCloudConfig.json')
         .then(
           function (response) {
-          defer.resolve(response.data);
-        },
+            defer.resolve(response.data);
+          },
+
           function(response) { // Error callback
             defer.resolve("Error"); // Reject
           }
@@ -43,11 +44,17 @@ export class wordService {
 
   }
 
-  setText(data, append) {
+
+
+
+  setText(data, append, selectedWords) {
 
     function handleTextData(config) {
       var parsedData = that.wordService.dataToWordsArr(config.delimiters, that.text); // get the delimiters
-      that.initCloud(parsedData);
+      parsedData = that.wordService.spliceMaxWords( parsedData, config.maxWords);
+      that.initCloud(parsedData, selectedWords);
+      that.runListeners('updateData', parsedData);
+
     }
 
     // append data to this.text
@@ -154,31 +161,42 @@ export class wordService {
    */
 
   setDelimiters(delimiters) {
-      var t = "", pattern;
-      if (angular.isDefined(delimiters)) {
-        for (var property in delimiters) {
-          if (delimiters.hasOwnProperty(property)) {
-            t += (delimiters[property])
-          }
-        }
-        var x = '[]';
-        pattern = new RegExp(x.replace("[]", "[^" + t + "]+"), "g");
-      } else pattern=99; // 99 --> no delimiter , will be handle in setMatchWords()
+    var t = "", pattern;
+    if (angular.isDefined(delimiters)) {
+
+      let delimitersArr = delimiters.join('');
+      pattern = new RegExp('[\\s'+ delimitersArr +']+');
+
+
+
+
+
+
+
+    } else pattern=99; // 99 --> no delimiter , will be handle in setMatchWords()
 
     return pattern;
   };
 
   setMatchWords(text, pattern) {
     this.matchedWords = [];
-    if (pattern=99) { //no delimiters - use all the delimiters to delimiter
+    if (pattern == 99) { //no delimiters - use all the delimiters to delimiter
       pattern=(/([A-Z]||[a-z])\w+/g);
     }
     if( text.constructor.name=="String"){
-      this.matchedWords.push(text.match(pattern)); // takes each word from text and put them into elements in array
+      let splitedWords = text.split( pattern);
+      _.remove(splitedWords, function(word){
+        return word == "";
+      });
+      this.matchedWords.push(splitedWords); // takes each word from text and put them into elements in array
     }
     else   if( text.constructor.name=="Array") {
       for (var i = 0; i < text.length; i++) {
-          this.matchedWords.push(text[i].toString().match(pattern)); // takes each word from text and put them into elements in array
+        let splitedWords = text[i].toString().split( pattern);
+        _.remove(splitedWords, function(word){
+          return word == "";
+        });
+        this.matchedWords.push(splitedWords);//.match(pattern)); // takes each word from text and put them into elements in array
       }
     }
     return this.matchedWords
@@ -189,16 +207,19 @@ export class wordService {
     matchedWords.forEach(function (word, index) {
       if(angular.isDefined(word) &&(word!=null)){
         word.forEach(function (elm) {
-        var obj = _.find(stats, {text: elm});
-        if (obj != undefined) {//if word already exist, increase its size and push it occurrence in the array (children)
-          obj.size += 1;
-          obj.children.push(index);
-        } else {                // otherwise, push the word to array
-          stats.push({text: elm, id: ++wordId, size: 1, children: [index]});
-        }
-      });
+          var obj = _.find(stats, {text: elm});
+          if (obj != undefined) {//if word already exist, increase its size and push it occurrence in the array (children)
+            obj.size += 1;
+            obj.children.push(index);
+          } else {                // otherwise, push the word to array
+            stats.push({text: elm, id: ++wordId, size: 1, children: [index]});
+          }
+        });
+
+
       }
     });
+
     this.data = stats;
     return this.data;
   };
@@ -210,6 +231,16 @@ export class wordService {
     this.setStats(matchedWords);
 
     return this.data; // this.data has : size = the number of occurrences in cloud, children : the indexes of the sentences where the word appears .
+  }
+
+  spliceMaxWords( data, maxWords){
+    if(maxWords && data.length > maxWords){
+      var data = _.sortBy(data,"size");
+      data = _.reverse(data);
+      data = data.splice(0, maxWords);
+      return data;
+    }
+    return data;
   }
 
   calcFontSize(id) {
@@ -234,20 +265,23 @@ export class wordService {
   }
 
   getCurrentDirectory() {
-   //@@ Dev Version @@
-  /*  var scripts = document.getElementsByTagName("script"), i;
-   for (i = 0; i < scripts.length; i++) {
-      if (scripts[i].src.search(/index.module.js/i) > 0) {
-        break;
-      }
-    }
-    var currentScriptPath = scripts[i].src;*/
-   // var resCurrentDirectory = currentScriptPath.substring(0, currentScriptPath.lastIndexOf("/app/") + 1);
+    //@@ Dev Version @@
+    /*  var scripts = document.getElementsByTagName("script"), i;
+     for (i = 0; i < scripts.length; i++) {
+     if (scripts[i].src.search(/index.module.js/i) > 0) {
+     break;
+     }
+     }
+
+
+     var currentScriptPath = scripts[i].src;*/
+    // var resCurrentDirectory = currentScriptPath.substring(0, currentScriptPath.lastIndexOf("/app/") + 1);
 
     // Build Version :
     var resCurrentDirectory=document.getElementsByTagName("script")[0].baseURI;
     return resCurrentDirectory ;
   }
+
 
 }
 

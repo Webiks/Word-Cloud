@@ -2,7 +2,7 @@
  * Created by Harel on 27/07/2016.
  */
 describe('wbxWordCloud', function () {
-  //beforeEach(angular.mock.module('untitled1'));
+
   beforeEach(angular.mock.module('wbxWordCloud'));
   beforeEach(angular.mock.module('one'));
 
